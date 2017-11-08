@@ -21,10 +21,14 @@
       </div>
       <div class="game-info">
           <div>{{ status }}</div>
-          <ol>{{ 1 + 1 }}</ol>
+          <ol>
+            <li
+              v-for="(val,index) in history"
+              @click="jumpTo(index)"
+            >{{ index ? 'step #' + index : 'game start'}}</li>
+          </ol>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -44,12 +48,17 @@ export default {
     status: function() {
       if (this.winner === '') {
         return 'next player: '+ (this.xIsNext ? 'X': 'O')
+      } else {
+        return 'winner is '+ (this.xIsNext ? 'X': 'O')
       }
     }
   },
   methods: {
     // one step
     setSquares: function (index) {
+      // 已经有赢家
+      if (this.winner !== '') return;
+
       let squares = this.history[this.stepNumber].squares.slice();
 
       // 如果已经有旗子，返回
@@ -60,8 +69,12 @@ export default {
       }
 
       // 如果已经胜利，返回
-      if (this.calculateWinner(squares) || this.history[this.stepNumber-1] && this.history[this.stepNumber-1].squares[index]) {
+      const WINNER = this.calculateWinner(squares);
+
+      if (WINNER) {
         this.history = this.history.concat({squares: squares});
+        this.stepNumber ++;
+        this.winner = this.history[this.stepNumber].squares[WINNER[0]];
         return;
       }
 
@@ -90,6 +103,16 @@ export default {
         }
       }
       return null;
+    },
+
+    jumpTo: function(index) {
+      const history = [].slice.apply(this.history, [0, index + 1]);
+      if (history.length == this.history.length) return;
+
+      this.stepNumber = index;
+      this.winner = '';
+      this.xIsNext = history.length % 2 ? true : false;
+      this.history = history;
     }
   }
 }
@@ -144,6 +167,7 @@ export default {
   }
 
   .game-info {
+    width: 120px;
     margin-left: 20px;
   }
 </style>
